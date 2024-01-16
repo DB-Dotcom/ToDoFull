@@ -1,8 +1,8 @@
-const express = require('express');
-const connectDB = require('./database');
-const authRoutes = require('./authRoutes');
-const cors = require('cors');
-const morgan = require('morgan');
+import express from 'express';
+import connectDB from './database.js';
+import authRoutes from './authRoutes.js';
+import cors from 'cors';
+import morgan from 'morgan';
 
 const app = express();
 
