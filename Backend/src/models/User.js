@@ -2,17 +2,33 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  }
 });
 
+// Vor dem Speichern des Benutzers wird das Passwort verschlüsselt
 userSchema.pre('save', async function(next) {
+  // Nur verschlüsseln, wenn das Passwort geändert wurde
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 8);
+
+  // Generieren eines Salts und Verschlüsseln des Passworts
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
-userSchema.methods.comparePassword = function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+// Methode zum Überprüfen des Passworts bei der Anmeldung
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+
+export default User;
