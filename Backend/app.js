@@ -1,21 +1,39 @@
 import express from 'express';
-import connectDB from './database.js';
-import authRoutes from './src/routes/authRoutes.js';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 
+import authRoutes from './routes/authRoutes.js';
+import todoRoutes from './routes/todoRoutes.js';
+
+dotenv.config();
+
 const app = express();
 
-// Datenbankverbindung
-connectDB();
-
 // Middleware
+app.use(cors());
+app.use(morgan('dev'));
 app.use(express.json());
-app.use(cors()); // Standardkonfiguration ohne eingeschränkte Domains
-app.use(morgan('dev')); // 'dev' ist ein vorkonfiguriertes Protokollformat
+
+// Datenbankverbindung
+mongoose.connect(process.env.MONGODB_URI, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true 
+}).then(() => {
+    console.log('MongoDB verbunden');
+}).catch(err => {
+    console.error('MongoDB Verbindungsfehler:', err);
+});
 
 // Routen
 app.use('/api/auth', authRoutes);
+app.use('/api/todos', todoRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+// Server starten
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server läuft auf Port ${PORT}`);
+});
+
+export default app;
