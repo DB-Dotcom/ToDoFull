@@ -1,6 +1,6 @@
 import express from 'express';
 import connectDB from './database.js';
-import authRoutes from './authRoutes.js';
+import authRoutes from './src/routes/authRoutes.js';
 import cors from 'cors';
 import morgan from 'morgan';
 
