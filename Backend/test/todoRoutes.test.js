@@ -5,6 +5,27 @@ import app from '../app.js';
 const request = supertest(app);
 let token;
 
+// Registrieren eines neuen Benutzers
+test.serial('Registrierung eines neuen Benutzers', async t => {
+  const res = await request.post('/api/auth/register').send({
+    username: 'neuertestuser',
+    password: 'testpassword'
+  });
+
+  t.is(res.status, 201); // Überprüfen, ob die Registrierung erfolgreich war
+}, { timeout: 10000 }); // Erhöht das Timeout auf 10 Sekunden
+
+// Einloggen und Token abrufen
+test.serial('Einloggen des neuen Benutzers und Abrufen des Tokens', async t => {
+  const res = await request.post('/api/auth/login').send({
+    username: 'neuertestuser',
+    password: 'testpassword'
+  });
+
+  t.is(res.status, 200); // Überprüfen, ob der Login erfolgreich war
+  token = res.body.token; // Token für nachfolgende Tests speichern
+}, { timeout: 10000 });
+
 test.before(async t => {
   // Anmelden und Token für Authentifizierung abrufen
   const res = await request.post('/api/auth/login').send({
