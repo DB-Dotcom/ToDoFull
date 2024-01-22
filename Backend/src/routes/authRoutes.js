@@ -17,11 +17,12 @@ router.post('/register', async (req, res) => {
     }
 
     // Verschlüsseln des Passworts
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+ /*    const salt = await bcrypt.genSalt(10); */
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Neuen Benutzer erstellen
     const user = new User({ username, password: hashedPassword });
+    console.log(user)
     await user.save();
 
     res.status(201).send('Benutzer erfolgreich registriert.');
@@ -33,18 +34,23 @@ router.post('/register', async (req, res) => {
 // Benutzeranmeldung
 router.post('/login', async (req, res) => {
   try {
+
+    
     const { username, password } = req.body;
 
     // Benutzer suchen
     const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(400).send('Benutzername oder Passwort falsch.');
+    if (!user) { 
+      return res.status(400).send('Benutzername ist falsch.');
     }
 
     // Passwort überprüfen
+    console.log(user.password, password)
+  
+
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(400).send('Benutzername oder Passwort falsch.');
+      return res.status(400).send('Passwort ist falsch.');
     }
 
     // JWT-Token erstellen

@@ -1,78 +1,59 @@
 import test from 'ava';
 import supertest from 'supertest';
-import app from '../app.js'; 
+import app from '../app.js'; // Pfad zu Ihrer Server-App
 
 const request = supertest(app);
 let token;
+let todoId;
 
-// Registrieren eines neuen Benutzers
+// Benutzerregistrierung
 test.serial('Registrierung eines neuen Benutzers', async t => {
   const res = await request.post('/api/auth/register').send({
-    username: 'neuertestuser',
-    password: 'testpassword'
+    username: 'testuser',
+    password: 'password'
   });
+  t.is(res.status, 201);
+});
 
-  t.is(res.status, 201); // Überprüfen, ob die Registrierung erfolgreich war
-}, { timeout: 10000 }); // Erhöht das Timeout auf 10 Sekunden
-
-// Einloggen und Token abrufen
-test.serial('Einloggen des neuen Benutzers und Abrufen des Tokens', async t => {
-  const res = await request.post('/api/auth/login').send({
-    username: 'neuertestuser',
-    password: 'testpassword'
-  });
-
-  t.is(res.status, 200); // Überprüfen, ob der Login erfolgreich war
-  token = res.body.token; // Token für nachfolgende Tests speichern
-}, { timeout: 10000 });
-
-test.before(async t => {
-  // Anmelden und Token für Authentifizierung abrufen
+// Benutzeranmeldung
+test.serial('Anmeldung eines Benutzers', async t => {
   const res = await request.post('/api/auth/login').send({
     username: 'testuser',
     password: 'password'
   });
-  token = res.body.token;
+  t.is(res.status, 200);
+  token = res.body.token; // Token für nachfolgende Anfragen speichern
 });
 
-test('Erstellen eines ToDo-Eintrags', async t => {
+// Erstellen eines neuen ToDos
+test.serial('Erstellen eines neuen ToDos', async t => {
   const res = await request.post('/api/todos')
     .set('Authorization', `Bearer ${token}`)
     .send({ text: 'Test ToDo' });
   t.is(res.status, 201);
-  t.truthy(res.body._id); // Stellen Sie sicher, dass eine ID zurückgegeben wird
+  todoId = res.body._id; // ToDo-ID für nachfolgende Tests speichern
 });
 
-test('Abrufen aller ToDo-Einträge', async t => {
+// Abrufen aller ToDos
+test.serial('Abrufen aller ToDos', async t => {
   const res = await request.get('/api/todos')
     .set('Authorization', `Bearer ${token}`);
   t.is(res.status, 200);
-  t.true(Array.isArray(res.body)); // Sollte ein Array sein
+  t.true(Array.isArray(res.body));
 });
 
-test('Aktualisieren eines ToDo-Eintrags', async t => {
-  // Sie müssen zuerst ein ToDo erstellen oder eine bestehende ID verwenden
-  const todoRes = await request.post('/api/todos')
+// Aktualisieren eines ToDo
+test.serial('Aktualisieren eines ToDo', async t => {
+  const res = await request.put(`/api/todos/${todoId}`)
     .set('Authorization', `Bearer ${token}`)
-    .send({ text: 'Test ToDo' });
-  const todoId = todoRes.body._id;
-
-  const updateRes = await request.put(`/api/todos/${todoId}`)
-    .set('Authorization', `Bearer ${token}`)
-    .send({ text: 'Geändertes ToDo', completed: true });
-  t.is(updateRes.status, 200);
-  t.is(updateRes.body.text, 'Geändertes ToDo');
-  t.true(updateRes.body.completed);
+    .send({ text: 'Geändertes Test ToDo', completed: true });
+  t.is(res.status, 200);
+  t.is(res.body.text, 'Geändertes Test ToDo');
 });
 
-test('Löschen eines ToDo-Eintrags', async t => {
-  // Sie müssen zuerst ein ToDo erstellen oder eine bestehende ID verwenden
-  const todoRes = await request.post('/api/todos')
-    .set('Authorization', `Bearer ${token}`)
-    .send({ text: 'Zu löschendes ToDo' });
-  const todoId = todoRes.body._id;
-
-  const deleteRes = await request.delete(`/api/todos/${todoId}`)
+// Löschen eines ToDo
+test.serial('Löschen eines ToDo', async t => {
+  const res = await request.delete(`/api/todos/${todoId}`)
     .set('Authorization', `Bearer ${token}`);
-  t.is(deleteRes.status, 200);
+  t.is(res.status, 200);
 });
